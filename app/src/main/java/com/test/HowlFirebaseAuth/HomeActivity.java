@@ -2,8 +2,10 @@ package com.test.HowlFirebaseAuth;
 
 import android.*;
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -12,6 +14,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.CursorLoader;
+import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -32,11 +35,16 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -48,7 +56,6 @@ public class HomeActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     private final static int GALLERY_CODE = 10;
-    private final static int SLIDESHOW_CODE = 20;
 
     private TextView nameTextView;
     private TextView emailTextView;
@@ -62,15 +69,20 @@ public class HomeActivity extends AppCompatActivity
     private FirebaseUser mFirebaseUser;
     private FirebaseStorage mFirebaseStorage;
     private FirebaseDatabase mFirebaseDatabase;
+    private FirebaseRemoteConfig mFirebaseRemoteConfig;
 
     GoogleSignInOptions mGoogleSignInOptions;
     GoogleApiClient mGoogleApiClient;
+
+    Toolbar toolbar;
+
+    private EditText errorText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         imageView = (ImageView) findViewById(R.id.imageView);
@@ -112,8 +124,7 @@ public class HomeActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                FirebaseCrash.report(new Exception("My first Android non-fatal error"));
             }
         });
 
@@ -130,8 +141,10 @@ public class HomeActivity extends AppCompatActivity
         nameTextView = (TextView) headerView.findViewById(R.id.header_name_textView);
         emailTextView = (TextView) headerView.findViewById(R.id.header_email_textView);
 
+        nameTextView.setText(FirebaseAuth.getInstance().getCurrentUser().getDisplayName());
+        emailTextView.setText(FirebaseAuth.getInstance().getCurrentUser().getEmail());
 
-        updateProfile();
+        remoteConfig();
 
 
         button.setOnClickListener(new View.OnClickListener(){
@@ -143,9 +156,57 @@ public class HomeActivity extends AppCompatActivity
 
     }
 
-    public void updateProfile(){
-        nameTextView.setText(FirebaseAuth.getInstance().getCurrentUser().getDisplayName());
-        emailTextView.setText(FirebaseAuth.getInstance().getCurrentUser().getEmail());
+    private void remoteConfig(){
+
+        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
+        //디버깅 테스트를 할때 사용
+        //1분에 3번이상 요청하면 서버에 과부하가 걸리기 때문에 Failed발생
+        FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
+                .setDeveloperModeEnabled(BuildConfig.DEBUG)
+                .build();
+        mFirebaseRemoteConfig.setConfigSettings(configSettings);
+        //서버에 매칭되는 값이 없을때 참조
+        mFirebaseRemoteConfig.setDefaults(R.xml.remote_config_defaults);
+
+        mFirebaseRemoteConfig.fetch(0)
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(HomeActivity.this, "Fetch Succeeded",
+                                    Toast.LENGTH_SHORT).show();
+
+                            // After config data is successfully fetched, it must be activated before newly fetched
+                            // values are returned.
+                            mFirebaseRemoteConfig.activateFetched();
+                        } else {
+                            Toast.makeText(HomeActivity.this, "Fetch Failed",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                        displayWelcomeMessage();
+                    }
+                });
+    }
+
+    private void displayWelcomeMessage(){
+        String toolBarColor = mFirebaseRemoteConfig.getString("toolBarColor");
+        Boolean aBoolean = mFirebaseRemoteConfig.getBoolean("welcome_message_caps");
+        String message = mFirebaseRemoteConfig.getString("welcome_message");
+
+        toolbar.setBackgroundColor(Color.parseColor(toolBarColor));
+
+        if(aBoolean){
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage(message).setPositiveButton("Confirm", new DialogInterface.OnClickListener(){
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+
+                    //서버점검
+                    //HomeActivity.this.finish();
+                }
+            });
+            builder.create().show();
+        }
     }
 
     @Override
@@ -238,7 +299,7 @@ public class HomeActivity extends AppCompatActivity
         //Storage Server
         StorageReference storageRef = mFirebaseStorage.getReferenceFromUrl("gs://howlfirebaseauth-24336.appspot.com");
 
-        Uri file = Uri.fromFile( new File(uri) );
+        final Uri file = Uri.fromFile( new File(uri) );
         StorageReference riversRef = storageRef.child("images/"+file.getLastPathSegment());
         UploadTask uploadTask = riversRef.putFile(file);
 
@@ -258,6 +319,8 @@ public class HomeActivity extends AppCompatActivity
 
                 ImageDTO imageDTO = new ImageDTO();
                 imageDTO.setImageUrl(downloadUrl.toString());
+                //Image Name
+                imageDTO.setImageName(file.getLastPathSegment());
                 imageDTO.setTitle(title.getText().toString());
                 imageDTO.setDescription(description.getText().toString());
                 imageDTO.setUid(mFirebaseAuth.getCurrentUser().getUid());

@@ -9,6 +9,7 @@ import java.util.Map;
 
 class ImageDTO {
     private String imageUrl;
+    private String imageName;
     private String title;
     private String description;
     private String uid;
@@ -22,6 +23,14 @@ class ImageDTO {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public String getImageName() {
+        return imageName;
+    }
+
+    public void setImageName(String imageName) {
+        this.imageName = imageName;
     }
 
     public String getTitle() {
