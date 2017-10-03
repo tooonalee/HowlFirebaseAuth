@@ -57,13 +57,14 @@ public class HomeActivity extends AppCompatActivity
 
     private final static int GALLERY_CODE = 10;
 
-    private TextView nameTextView;
-    private TextView emailTextView;
     private ImageView imageView;
     private EditText title;
     private EditText description;
     private Button button;
     private String imagePath;
+
+    private TextView nameTextView;
+    private TextView emailTextView;
 
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
@@ -96,16 +97,9 @@ public class HomeActivity extends AppCompatActivity
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
         mFirebaseStorage = mFirebaseStorage.getInstance();
 
-        //권한
+        //Permission
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},0);
-        }
-
-        //인증 해제된 상태이면 인증창을 돌아감
-        if(mFirebaseUser == null){
-            startActivity(new Intent(HomeActivity.this, MainActivity.class));
-            finish();
-            return;
         }
 
         mGoogleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -269,10 +263,12 @@ public class HomeActivity extends AppCompatActivity
                     new ResultCallback<Status>() {
                         @Override
                         public void onResult(@NonNull Status status) {
+
                             finish();
                             startActivity(new Intent(HomeActivity.this, MainActivity.class));
                         }
                     });
+
 
         }
 
