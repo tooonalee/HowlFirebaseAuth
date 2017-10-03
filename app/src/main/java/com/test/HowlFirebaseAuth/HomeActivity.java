@@ -57,9 +57,11 @@ public class HomeActivity extends AppCompatActivity
 
     private final static int GALLERY_CODE = 10;
 
+    // FIXME: この辺りのメンバ変数についても頭にmをつけた形で名前を修正してください
     private ImageView imageView;
     private EditText title;
     private EditText description;
+    // FIXME: もっと具体的な変数名をつけてください
     private Button button;
     private String imagePath;
 
@@ -72,6 +74,7 @@ public class HomeActivity extends AppCompatActivity
     private FirebaseDatabase mFirebaseDatabase;
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
 
+    // FIXME: ここはprivate化しなくても大丈夫ですか？
     GoogleSignInOptions mGoogleSignInOptions;
     GoogleApiClient mGoogleApiClient;
 
@@ -118,6 +121,7 @@ public class HomeActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // FIXME: Exceptionだとアバウトすぎるので、
                 FirebaseCrash.report(new Exception("My first Android non-fatal error"));
             }
         });
@@ -150,6 +154,7 @@ public class HomeActivity extends AppCompatActivity
 
     }
 
+    // FIXME: ) と { の間には半角スペースを入れてください
     private void remoteConfig(){
 
         mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
@@ -159,6 +164,7 @@ public class HomeActivity extends AppCompatActivity
                 .setDeveloperModeEnabled(BuildConfig.DEBUG)
                 .build();
         mFirebaseRemoteConfig.setConfigSettings(configSettings);
+        // FIXME: remote_config_defaultsがコミット漏れしていませんか？
         //서버에 매칭되는 값이 없을때 참조
         mFirebaseRemoteConfig.setDefaults(R.xml.remote_config_defaults);
 
@@ -183,6 +189,7 @@ public class HomeActivity extends AppCompatActivity
     }
 
     private void displayWelcomeMessage(){
+
         String toolBarColor = mFirebaseRemoteConfig.getString("toolBarColor");
         Boolean aBoolean = mFirebaseRemoteConfig.getBoolean("welcome_message_caps");
         String message = mFirebaseRemoteConfig.getString("welcome_message");
@@ -293,9 +300,11 @@ public class HomeActivity extends AppCompatActivity
 
     private void upload(String uri){
         //Storage Server
+        // FIXME: "gs://howlfirebaseauth-24336.appspot.com"を定数化してください
         StorageReference storageRef = mFirebaseStorage.getReferenceFromUrl("gs://howlfirebaseauth-24336.appspot.com");
 
         final Uri file = Uri.fromFile( new File(uri) );
+        // FIXME: "images/"を定数化してください
         StorageReference riversRef = storageRef.child("images/"+file.getLastPathSegment());
         UploadTask uploadTask = riversRef.putFile(file);
 
@@ -323,6 +332,7 @@ public class HomeActivity extends AppCompatActivity
                 imageDTO.setUserId(mFirebaseAuth.getCurrentUser().getEmail());
 
                 //push메소드를 추가하면 상위에 Sequence Key 생성됌
+                // FIXME: "images"を定数化してください
                 mFirebaseDatabase.getReference()
                         .child("images")
                         .push()

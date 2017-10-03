@@ -8,6 +8,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+// FIXME: 不要なインポート文は削除してください
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -33,6 +34,7 @@ import java.util.List;
 
 public class BoardActivity extends AppCompatActivity {
 
+    // FIXME: この辺りのメンバ変数についても頭にmをつけた形で名前を修正してください
     private RecyclerView recyclerView;
 
     private List<ImageDTO> imageDTOList = new ArrayList<>();
@@ -56,9 +58,11 @@ public class BoardActivity extends AppCompatActivity {
         final BoardRecyclerViewAdapter boardRecyclerViewAdapter = new BoardRecyclerViewAdapter();
         recyclerView.setAdapter(boardRecyclerViewAdapter);
 
+        // FIXME: 日本語のコメントに直してください
         //(옵저버 패턴) 글자 하나씩 바뀔 때 마다 자동갱신
         //관찰자가 있는 동안 계속 갱신됌
         //AllList
+        // FIXME: "images"を定数化してください
         mFirebaseDatabase.getReference().child("images").addValueEventListener(new ValueEventListener(){
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -108,6 +112,7 @@ public class BoardActivity extends AppCompatActivity {
             ((CustomViewHolder)holder).starButton.setOnClickListener(new View.OnClickListener(){
                 @Override
                 public void onClick(View view) {
+                    // FIXME: "images"を定数化してください
                     onStarClicked(mFirebaseDatabase.getReference().child("images").child(uidList.get(position) ) );
                 }
             });
@@ -166,6 +171,7 @@ public class BoardActivity extends AppCompatActivity {
 
         //Storage Image Delete
         private void delete_content(final int position){
+            // FIXME: "images"を定数化してください
             mFirebaseStorage.getReference().child("images").child(imageDTOList.get(position).getImageName()).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
                 @Override
                 public void onSuccess(Void aVoid) {
@@ -198,6 +204,7 @@ public class BoardActivity extends AppCompatActivity {
 
         private class CustomViewHolder extends RecyclerView.ViewHolder{
             ImageView imageView;
+            // FIXME: TextViewの命名をもっと具体的にしてください
             TextView textView;
             TextView textView2;
             ImageView starButton;

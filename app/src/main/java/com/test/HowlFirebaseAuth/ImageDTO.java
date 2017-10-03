@@ -15,6 +15,7 @@ class ImageDTO {
     private String uid;
     private String userId;
     private int startCount = 0;
+    // FIXME: これは何を管理するHashMapですか？名前をわかりやすくした方が良いかと思います
     private Map<String, Boolean> stars = new HashMap<>();
 
     public String getImageUrl() {

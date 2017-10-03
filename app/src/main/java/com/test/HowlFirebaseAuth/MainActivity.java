@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+// FIXME: 不要なインポート文は消してください
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -31,7 +32,9 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
     private GoogleApiClient mGoogleApiClient;
     private FirebaseAuth mFirebaseAuth;
 
+    // FIXME: editTextEmail -> mEditTextEmail
     private EditText editTextEmail;
+    // FIXME: editTextPassword -> mEditTextPassword
     private EditText editTextPassword;
 
     private FirebaseAuth.AuthStateListener mFirebaseAuthListener;
@@ -41,19 +44,25 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // FIXME: このコメントを日本語で書いて欲しいです
         // Configure Google Sign In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
                 .build();
 
+        // FIXME: mGoogleApiClientはgoogleLoginButton.setOnClickListenerの中でしか使っていないようなので、
+        // ローカル変数化した方が良いかと思います
         mGoogleApiClient = new GoogleApiClient.Builder(this)
+                // FIXME: ここのコメントは現実装と合っていないようなので消した方が良いです
                 .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
         mFirebaseAuth = FirebaseAuth.getInstance();
 
+        // TODO: 昨日お伝えしましたが、DataBindingLibraryを使うとfindViewByIdが要らなくなるので使った方がよいです
+        // (修正は必須ではないです)
         editTextEmail = (EditText) findViewById(R.id.editText_email);
         editTextPassword = (EditText) findViewById(R.id.editText_password);
 
@@ -74,6 +83,7 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
             }
         });
 
+        // FIXME: ここもコメントを日本語にして欲しいです
         //FirebaseAuthListener
         //로그인 상태 변화에 응답한다.
         //onStart, onStop 시작하면 리스너를 달아주고 끝나면 리스너를 뗀다.
@@ -97,6 +107,7 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        // FIXME: ここもコメントを日本語にして欲しいです
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
@@ -111,6 +122,7 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
         }
     }
 
+    // FIXME: ここもコメントを日本語にして欲しいです
     private void createUser(final String email, final String password){
         mFirebaseAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -119,6 +131,7 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
                         if (task.isSuccessful()) {
                             loginUser(email, password);
                         } else {
+                            // FIXME: 失敗しているのに「Register Successfully」は不適切です
                             // If sign in fails, display a message to the user.
                             Toast.makeText(MainActivity.this, "Register Successfully", Toast.LENGTH_LONG).show();
                         }
@@ -136,6 +149,7 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
                     if (task.isSuccessful()) {
 
                     } else {
+                        // FIXME: 失敗しているのに「Login Successfully」は不適切です
                         Toast.makeText(MainActivity.this, "Login SuccessFully", Toast.LENGTH_LONG).show();
                     }
 
@@ -171,6 +185,7 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
 
     @Override
     public void onStart(){
+        // FIXME: ここもコメントを日本語にして欲しいです
         //시작할 때 귀를 달아주고
         super.onStart();
         mFirebaseAuth.addAuthStateListener(mFirebaseAuthListener);
@@ -178,6 +193,7 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
 
     @Override
     public void onStop(){
+        // FIXME: ここもコメントを日本語にして欲しいです
         // 끝나면 귀를 떼는...
         super.onStop();
         if(mFirebaseAuthListener != null){
