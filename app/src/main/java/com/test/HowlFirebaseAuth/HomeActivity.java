@@ -2,6 +2,7 @@ package com.test.HowlFirebaseAuth;
 
 import android.*;
 import android.Manifest;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -9,6 +10,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -24,6 +26,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -43,6 +46,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 import com.google.firebase.storage.FirebaseStorage;
@@ -50,7 +56,16 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class HomeActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -151,6 +166,11 @@ public class HomeActivity extends AppCompatActivity
                 upload(imagePath);
             }
         });
+
+        FirebaseMessaging.getInstance().subscribeToTopic("all");
+        FirebaseInstanceId.getInstance().getToken();
+
+        AlarmAlertWakeLock.acquireCpuWakeLock(getApplicationContext());
 
     }
 
@@ -262,7 +282,7 @@ public class HomeActivity extends AppCompatActivity
         } else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
-
+            sendNotification();
         } else if (id == R.id.nav_logout){
             mFirebaseAuth.signOut();
             // Google sign out
@@ -364,4 +384,42 @@ public class HomeActivity extends AppCompatActivity
 
         return cursor.getString(index);
     }
+
+    public void sendNotification(){
+        OkHttpClient client = new OkHttpClient();
+
+        MediaType mediaType = MediaType.parse("application/json");
+        RequestBody body = RequestBody.create(mediaType, "{\r\n  \"to\": \"cAWAnOeNANo:APA91bGrTu0h2nDZmbDr_JH0J5qZBwZsQR49oxU-4EHbGsw1zgb0ggJuBMj3FTcdemKn_8vBlG8b_qlcc9rsT6obPwXimQtvNAe7YLSprq2SC17mV6gSYL-TODJUd41XhhyNKRaDjkdi\",\r\n  \"data\": {\r\n    \"title\": \"This is a Firebase Cloud Messaging Topic Message!\"\r\n   }\r\n}");
+        Request request = new Request.Builder()
+                .url("https://fcm.googleapis.com/fcm/send")
+                .post(body)
+                .addHeader("content-type", "application/json")
+                .addHeader("authorization", "key=AAAAjK4zVoE:APA91bHStDhnWFSZzspIvS45nvlb7M4z8rzXnWBvrkQnDwyHe9mwwpIo7EqE2Uqy8kZ1sX5DY_oli_2uVAoSfsOUw9iJyrcMcLVKsrKP6Y9Kj2bi-8aEy1t2nANEVs6q0T6f7hicQMV5")
+                .addHeader("cache-control", "no-cache")
+                .addHeader("postman-token", "17ec8d96-d29f-56c6-b236-327f264fd13d")
+                .build();
+
+
+
+        Callback callback = new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Toast.makeText(HomeActivity.this, "Send Failed : ",Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                //myJSON = response.body().string();
+                //Toast.makeText(HomeActivity.this, "Send Successfully : ",Toast.LENGTH_LONG).show();
+            }
+        };
+
+
+
+        client.newCall(request).enqueue(callback);
+
+
+    }
+
+
 }
