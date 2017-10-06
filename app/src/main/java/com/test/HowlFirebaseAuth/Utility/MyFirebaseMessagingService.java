@@ -1,24 +1,17 @@
-package com.test.HowlFirebaseAuth;
+package com.test.HowlFirebaseAuth.Utility;
 
-import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.Build;
-import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
-import android.view.Window;
-import android.view.WindowManager;
 
-import com.google.android.gms.common.api.Response;
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
+import com.test.HowlFirebaseAuth.Activity.HomeActivity;
+import com.test.HowlFirebaseAuth.R;
 
 import java.util.Map;
 
@@ -32,40 +25,15 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     public void onMessageReceived(RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
 
-        String refreshedToken = FirebaseInstanceId.getInstance().getToken();
-        Log.d("TAG", "Refreshed token: " + refreshedToken);
-
         Map<String, String> data = remoteMessage.getData();
-
-        String msg = data.get("title");
-
-        //Log.d("TAG", "remoteMessage.getNotification : " + remoteMessage.getNotification());
-        System.out.println("안드로이드 파이어베이스");
-       // Log.d("TAG", "Notification data: " + remoteMessage.getData().get("hoge"));
-        // Turn on the screen for notification
-
-//        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-//
-//        PowerManager.WakeLock wl = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK |PowerManager.ACQUIRE_CAUSES_WAKEUP |PowerManager.ON_AFTER_RELEASE,"MH24_SCREENLOCK");
-//        wl.acquire();
-//        PowerManager.WakeLock wl_cpu = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"MH24_SCREENLOCK");
-//        wl_cpu.acquire();
-
-        // 이 부분이 바로 화면을 깨우는 부분 되시겠다.
-        // 화면이 잠겨있을 때 보여주기
-
-        //AlarmAlertWakeLock.acquireCpuWakeLock(getApplicationContext());
-
-        showNotification(getApplicationContext(), remoteMessage, msg);
+        String title = data.get("title");
+        showNotification(remoteMessage, title);
 
     }
 
-    public void showNotification(Context context, RemoteMessage remoteMessage, String msg){
+    public void showNotification(RemoteMessage remoteMessage, String title){
 
-        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE );
-        PowerManager.WakeLock wakeLock = pm.newWakeLock( PowerManager.SCREEN_DIM_WAKE_LOCK
-                | PowerManager.ACQUIRE_CAUSES_WAKEUP, "TAG" );
-        wakeLock.acquire(3000);
+        AlarmAlertWakeLock.acquireCpuWakeLock(getApplicationContext());
 
         Intent intent = new Intent(this, HomeActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -76,8 +44,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this);
-        notificationBuilder.setContentTitle("NOTIFICATION");
-        notificationBuilder.setContentText(msg /*remoteMessage.getNotification().getBody()*/);
+        notificationBuilder.setContentTitle("Notification");
+        notificationBuilder.setContentText(title/*remoteMessage.getNotification().getBody()*/);
         notificationBuilder.setAutoCancel(true);
         notificationBuilder.setSmallIcon(R.mipmap.ic_launcher);
         notificationBuilder.setContentIntent(pendingIntent);
@@ -99,7 +67,15 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     }
 
+    @Override
+    public void onMessageSent(String msgID) {
+        Log.d("TAG", "onMessageSent: " + msgID );
+    }
 
+    @Override
+    public void onSendError(String msgID, Exception e) {
+        Log.d("TAG", "onSendError: " + e.getMessage() );
+    }
 }
 
 

@@ -8,6 +8,8 @@
         android:id="@+id/item_imageView"
         android:layout_width="match_parent"
         android:layout_height="200dp"
+        android:adjustViewBounds="false"
+        android:cropToPadding="true"
         app:srcCompat="@color/colorAccent" />
 
     <TextView

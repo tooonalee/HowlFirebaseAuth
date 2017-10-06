@@ -1,8 +1,6 @@
-package com.test.HowlFirebaseAuth;
+package com.test.HowlFirebaseAuth.Activity;
 
-import android.*;
 import android.Manifest;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -10,11 +8,11 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.PowerManager;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.CursorLoader;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
@@ -26,7 +24,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -46,18 +43,18 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.test.HowlFirebaseAuth.BuildConfig;
+import com.test.HowlFirebaseAuth.ValueObject.ImageDTO;
+import com.test.HowlFirebaseAuth.R;
+import com.test.HowlFirebaseAuth.Utility.ProgressDialogTask;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -90,8 +87,8 @@ public class HomeActivity extends AppCompatActivity
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
 
     // FIXME: ここはprivate化しなくても大丈夫ですか？
-    GoogleSignInOptions mGoogleSignInOptions;
-    GoogleApiClient mGoogleApiClient;
+    private GoogleSignInOptions mGoogleSignInOptions;
+    private GoogleApiClient mGoogleApiClient;
 
     Toolbar toolbar;
 
@@ -103,17 +100,6 @@ public class HomeActivity extends AppCompatActivity
         setContentView(R.layout.activity_home);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        imageView = (ImageView) findViewById(R.id.imageView);
-        title = (EditText) findViewById(R.id.title);
-        description = (EditText) findViewById(R.id.description);
-        button = (Button) findViewById(R.id.button);
-
-        mFirebaseAuth = FirebaseAuth.getInstance();
-        mFirebaseDatabase = FirebaseDatabase.getInstance();
-
-        mFirebaseUser = mFirebaseAuth.getCurrentUser();
-        mFirebaseStorage = mFirebaseStorage.getInstance();
 
         //Permission
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -129,8 +115,6 @@ public class HomeActivity extends AppCompatActivity
                 .enableAutoManage(this, null) //2번째 인자값이 this인 이유는 GoogleApiClient.OnConnectionFailedListener 상속
                 .addApi(Auth.GOOGLE_SIGN_IN_API, mGoogleSignInOptions)
                 .build();
-
-
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -159,7 +143,19 @@ public class HomeActivity extends AppCompatActivity
 
         remoteConfig();
 
+        /////////////////////////////////////////////////
+        mFirebaseAuth = FirebaseAuth.getInstance();
+        mFirebaseDatabase = FirebaseDatabase.getInstance();
 
+        mFirebaseUser = mFirebaseAuth.getCurrentUser();
+        mFirebaseStorage = mFirebaseStorage.getInstance();
+
+        imageView = (ImageView) findViewById(R.id.imageView);
+        title = (EditText) findViewById(R.id.title);
+        description = (EditText) findViewById(R.id.description);
+        button = (Button) findViewById(R.id.button);
+
+        //
         button.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
@@ -167,10 +163,16 @@ public class HomeActivity extends AppCompatActivity
             }
         });
 
-        FirebaseMessaging.getInstance().subscribeToTopic("all");
-        FirebaseInstanceId.getInstance().getToken();
+        imageView = (ImageView) findViewById(R.id.imageView);
+        imageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(Intent.ACTION_PICK);
+                intent.setType(MediaStore.Images.Media.CONTENT_TYPE);
+                startActivityForResult(intent, GALLERY_CODE);
+            }
+        });
 
-        AlarmAlertWakeLock.acquireCpuWakeLock(getApplicationContext());
 
     }
 
@@ -268,18 +270,23 @@ public class HomeActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
+        Fragment fragment = null;
+
         if (id == R.id.nav_camera) {
             // Handle the camera action
-            startActivity(new Intent(this, BoardActivity.class));
+            startActivity(new Intent(this, HomeActivity.class));
         } else if (id == R.id.nav_gallery) {
             Intent intent = new Intent(Intent.ACTION_PICK);
             intent.setType(MediaStore.Images.Media.CONTENT_TYPE);
             startActivityForResult(intent, GALLERY_CODE);
         } else if (id == R.id.nav_slideshow) {
+            startActivity(new Intent(this, BoardActivity.class));
 
         } else if (id == R.id.nav_manage) {
 
+/*
         } else if (id == R.id.nav_share) {
+*/
 
         } else if (id == R.id.nav_send) {
             sendNotification();
@@ -290,14 +297,20 @@ public class HomeActivity extends AppCompatActivity
                     new ResultCallback<Status>() {
                         @Override
                         public void onResult(@NonNull Status status) {
-
                             finish();
                             startActivity(new Intent(HomeActivity.this, MainActivity.class));
                         }
                     });
 
-
         }
+
+        if (fragment != null) {
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            ft.replace(R.id.content_fragment_layout, fragment);
+            ft.commit();
+        }
+
+
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -306,15 +319,14 @@ public class HomeActivity extends AppCompatActivity
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        System.out.println(data.getData());
-        System.out.println(getPath(data.getData()));
 
         if(requestCode == GALLERY_CODE){
-            imagePath = getPath(data.getData());
-            File f = new File(imagePath);
-            //Image 적용
-            imageView.setImageURI(Uri.fromFile(f));
-
+            if(data.getData() != null){
+                imagePath = getPath(data.getData());
+                File f = new File(imagePath);
+                //Image 적용
+                imageView.setImageURI(Uri.fromFile(f));
+            }
         }
     }
 
@@ -327,6 +339,10 @@ public class HomeActivity extends AppCompatActivity
         // FIXME: "images/"を定数化してください
         StorageReference riversRef = storageRef.child("images/"+file.getLastPathSegment());
         UploadTask uploadTask = riversRef.putFile(file);
+
+        final ProgressDialogTask task = new ProgressDialogTask(HomeActivity.this);
+        task.execute();
+
 
         // Register observers to listen for when the download is done or if it fails
         uploadTask.addOnFailureListener(new OnFailureListener() {
@@ -341,6 +357,7 @@ public class HomeActivity extends AppCompatActivity
                 // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
                 @SuppressWarnings("VisibleForTests")
                 Uri downloadUrl = taskSnapshot.getDownloadUrl();
+
 
                 ImageDTO imageDTO = new ImageDTO();
                 imageDTO.setImageUrl(downloadUrl.toString());
@@ -361,12 +378,14 @@ public class HomeActivity extends AppCompatActivity
                             @Override
                             public void onSuccess(Void aVoid) {
                                 Toast.makeText(HomeActivity.this, "Firebase : Insert Data Successfully", Toast.LENGTH_LONG).show();
+                                task.dismissDialog();
                             }
                         })
                         .addOnFailureListener(new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
                                 Toast.makeText(HomeActivity.this, "Firebase : Cannot insert data Failed", Toast.LENGTH_LONG).show();
+                                task.dismissDialog();
                             }
                         });
             }
@@ -388,8 +407,12 @@ public class HomeActivity extends AppCompatActivity
     public void sendNotification(){
         OkHttpClient client = new OkHttpClient();
 
+        String to = "/topics/all";
+        String title = "Hello Firebase!";
+
         MediaType mediaType = MediaType.parse("application/json");
-        RequestBody body = RequestBody.create(mediaType, "{\r\n  \"to\": \"cAWAnOeNANo:APA91bGrTu0h2nDZmbDr_JH0J5qZBwZsQR49oxU-4EHbGsw1zgb0ggJuBMj3FTcdemKn_8vBlG8b_qlcc9rsT6obPwXimQtvNAe7YLSprq2SC17mV6gSYL-TODJUd41XhhyNKRaDjkdi\",\r\n  \"data\": {\r\n    \"title\": \"This is a Firebase Cloud Messaging Topic Message!\"\r\n   }\r\n}");
+        RequestBody body = RequestBody.create(mediaType,
+                "{\r\n  \"to\": \""+ to +"\",\r\n  \"data\": {\r\n    \"title\": \"" + title + "\"\r\n   }\r\n}");
         Request request = new Request.Builder()
                 .url("https://fcm.googleapis.com/fcm/send")
                 .post(body)
@@ -400,26 +423,33 @@ public class HomeActivity extends AppCompatActivity
                 .build();
 
 
-
-        Callback callback = new Callback() {
+        client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                Toast.makeText(HomeActivity.this, "Send Failed : ",Toast.LENGTH_LONG).show();
+                call.cancel();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(HomeActivity.this, "Send Failed ", Toast.LENGTH_LONG).show();
+                    }
+                });
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                //myJSON = response.body().string();
-                //Toast.makeText(HomeActivity.this, "Send Successfully : ",Toast.LENGTH_LONG).show();
+
+                String myResponse = response.body().string();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(HomeActivity.this, "Send Successfully", Toast.LENGTH_LONG).show();
+                    }
+                });
             }
-        };
-
-
-
-        client.newCall(request).enqueue(callback);
-
+        });
 
     }
+
 
 
 }

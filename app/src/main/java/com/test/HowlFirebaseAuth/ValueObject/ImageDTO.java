@@ -1,4 +1,4 @@
-package com.test.HowlFirebaseAuth;
+package com.test.HowlFirebaseAuth.ValueObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -7,7 +7,7 @@ import java.util.Map;
  * Created by admin on 2017/09/29.
  */
 
-class ImageDTO {
+public class ImageDTO {
     private String imageUrl;
     private String imageName;
     private String title;

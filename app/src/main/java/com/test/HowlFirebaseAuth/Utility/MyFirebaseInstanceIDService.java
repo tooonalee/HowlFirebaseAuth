@@ -1,4 +1,4 @@
-package com.test.HowlFirebaseAuth;
+package com.test.HowlFirebaseAuth.Utility;
 
 import android.content.Context;
 import android.os.PowerManager;
@@ -21,10 +21,11 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService{
 
         String refreshedToken = FirebaseInstanceId.getInstance().getToken();
         Log.d(TAG, "Refreshed token: " + refreshedToken);
-        Log.d(TAG, "ON!!!!!!!!!!");
 
 
-        acquireCpuWakeLock();
+        FirebaseMessaging.getInstance().subscribeToTopic("all");
+
+
         sendRegistrationToServer(refreshedToken);
     }
 
@@ -32,19 +33,4 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService{
         // TODO: Implement this method to send token to your app server.
     }
 
-    private void acquireCpuWakeLock() {
-        PowerManager.WakeLock cpuWakeLock;
-
-        PowerManager pm = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
-        cpuWakeLock = pm.newWakeLock(
-                PowerManager.PARTIAL_WAKE_LOCK |
-                        PowerManager.ACQUIRE_CAUSES_WAKEUP |
-                        PowerManager.ON_AFTER_RELEASE, "hi");
-
-        cpuWakeLock.acquire(5000);
-
-/*        if (cpuWakeLock != null) {
-            cpuWakeLock.release();
-        }*/
-    }
 }

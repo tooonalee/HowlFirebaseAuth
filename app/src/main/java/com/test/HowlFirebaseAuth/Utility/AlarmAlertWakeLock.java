@@ -1,4 +1,4 @@
-package com.test.HowlFirebaseAuth;
+package com.test.HowlFirebaseAuth.Utility;
 
 import android.content.Context;
 import android.os.PowerManager;
@@ -17,9 +17,10 @@ public class AlarmAlertWakeLock {
         if (sCpuWakeLock != null) {
             return;
         }
-        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-        sCpuWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE, TAG);
-        sCpuWakeLock.acquire(30000);
+        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE );
+        PowerManager.WakeLock sCpuWakeLock = pm.newWakeLock( PowerManager.SCREEN_DIM_WAKE_LOCK
+                | PowerManager.ACQUIRE_CAUSES_WAKEUP, "TAG" );
+        sCpuWakeLock.acquire(3000);
     }
 
     static void releaseCpuLock() {

@@ -1,4 +1,4 @@
-package com.test.HowlFirebaseAuth;
+package com.test.HowlFirebaseAuth.Activity;
 
 import android.content.Intent;
 import android.support.annotation.NonNull;
@@ -25,7 +25,15 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
-import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.test.HowlFirebaseAuth.R;
+import com.test.HowlFirebaseAuth.ValueObject.Member;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements  GoogleApiClient.OnConnectionFailedListener{
 
@@ -34,11 +42,18 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
     private FirebaseAuth mFirebaseAuth;
 
     // FIXME: editTextEmail -> mEditTextEmail
-    private EditText editTextEmail;
+    private EditText mEditTextEmail;
     // FIXME: editTextPassword -> mEditTextPassword
-    private EditText editTextPassword;
+    private EditText mEditTextPassword;
 
     private FirebaseAuth.AuthStateListener mFirebaseAuthListener;
+    private FirebaseDatabase mFirebaseDatabase;
+
+    //--------------------------------------------------
+    // FirebaseDB DAO
+    //--------------------------------------------------
+    private List<Member> memberList = new ArrayList<>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,15 +77,16 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
 
         mFirebaseAuth = FirebaseAuth.getInstance();
 
+
         // TODO: 昨日お伝えしましたが、DataBindingLibraryを使うとfindViewByIdが要らなくなるので使った方がよいです
         // (修正は必須ではないです)
-        editTextEmail = (EditText) findViewById(R.id.editText_email);
-        editTextPassword = (EditText) findViewById(R.id.editText_password);
+        mEditTextEmail = (EditText) findViewById(R.id.editText_email);
+        mEditTextPassword = (EditText) findViewById(R.id.editText_password);
 
         Button emailLoginButton = (Button) findViewById(R.id.email_login_button);
         emailLoginButton.setOnClickListener(new View.OnClickListener(){
             public void onClick(View view){
-                createUser(editTextEmail.getText().toString(), editTextPassword.getText().toString());
+                createUser(mEditTextEmail.getText().toString(), mEditTextPassword.getText().toString());
             }
         });
 
@@ -84,22 +100,72 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
             }
         });
 
+
+
         // FIXME: ここもコメントを日本語にして欲しいです
         //FirebaseAuthListener
         //로그인 상태 변화에 응답한다.
         //onStart, onStop 시작하면 리스너를 달아주고 끝나면 리스너를 뗀다.
+
+
         mFirebaseAuthListener = new FirebaseAuth.AuthStateListener(){
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-                if(user != null){
-                    //User is signed up
-                    Intent intent = new Intent(MainActivity.this, HomeActivity.class);
-                    startActivity(intent);
-                    finish(); //현재 Activity 사라짐
-                } else {
-                    //User is signed out
-                }
+                //FirebaseDBからMemberObjectValueを全部引き出す。
+                mFirebaseDatabase = FirebaseDatabase.getInstance();
+                mFirebaseDatabase.getReference().child("members").addValueEventListener(new ValueEventListener() {
+
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        memberList.clear();
+                        for (DataSnapshot snapShot : dataSnapshot.getChildren()) {
+                            Member member = snapShot.getValue(Member.class);
+                            memberList.add(member);
+                        }
+
+                        //Loginをしたのか、まず確認。
+                        final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                        if(user != null){
+                            //認証した状態
+
+                            //自分のEmailでMemberObjectを探す
+                            Member searchMember = null;
+                            for (Member member : memberList) {
+                                if (member.getMemberEmail().equals(user.getEmail())) {
+                                    searchMember = member;
+                                    break;
+                                }
+                            }
+
+                            if(searchMember != null){
+                                //すでに登録した場合、Move HomeActivity
+                                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                                startActivity(intent);
+                                finish(); //현재 Activity 사라짐*/
+                            }else{
+                                //登録しなった場合、Move MemberActivity
+                                Intent intent = new Intent(MainActivity.this, MemberActivity.class);
+                                startActivity(intent);
+                                finish(); //현재 Activity 사라짐
+                            }
+
+                        }else{
+                            //認証していない状態
+
+                        }
+
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+
+                });
+
+
+
+
             }
         };
 
@@ -134,7 +200,6 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
                         } else {
                             // FIXME: 失敗しているのに「Register Successfully」は不適切です
                             // If sign in fails, display a message to the user.
-                            Toast.makeText(MainActivity.this, "Register Successfully", Toast.LENGTH_LONG).show();
                         }
 
                         // ...
@@ -151,7 +216,6 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
 
                     } else {
                         // FIXME: 失敗しているのに「Login Successfully」は不適切です
-                        Toast.makeText(MainActivity.this, "Login SuccessFully", Toast.LENGTH_LONG).show();
                     }
 
                     // ...
