@@ -30,6 +30,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.test.HowlFirebaseAuth.R;
+import com.test.HowlFirebaseAuth.Utility.ProgressDialogTask;
+import com.test.HowlFirebaseAuth.Utility.Singleton;
 import com.test.HowlFirebaseAuth.ValueObject.Member;
 
 import java.util.ArrayList;
@@ -111,12 +113,16 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
         mFirebaseAuthListener = new FirebaseAuth.AuthStateListener(){
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+
+
                 //FirebaseDBからMemberObjectValueを全部引き出す。
                 mFirebaseDatabase = FirebaseDatabase.getInstance();
+
                 mFirebaseDatabase.getReference().child("members").addValueEventListener(new ValueEventListener() {
 
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
+
                         memberList.clear();
                         for (DataSnapshot snapShot : dataSnapshot.getChildren()) {
                             Member member = snapShot.getValue(Member.class);
@@ -133,6 +139,7 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
                             for (Member member : memberList) {
                                 if (member.getMemberEmail().equals(user.getEmail())) {
                                     searchMember = member;
+                                    Singleton.getInstance().connectedMember = searchMember;
                                     break;
                                 }
                             }
@@ -153,6 +160,8 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
                             //認証していない状態
 
                         }
+
+
 
                     }
 

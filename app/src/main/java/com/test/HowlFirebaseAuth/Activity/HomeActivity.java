@@ -98,6 +98,9 @@ public class HomeActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        remoteConfig();
+
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -141,7 +144,7 @@ public class HomeActivity extends AppCompatActivity
         nameTextView.setText(FirebaseAuth.getInstance().getCurrentUser().getDisplayName());
         emailTextView.setText(FirebaseAuth.getInstance().getCurrentUser().getEmail());
 
-        remoteConfig();
+
 
         /////////////////////////////////////////////////
         mFirebaseAuth = FirebaseAuth.getInstance();
@@ -270,8 +273,6 @@ public class HomeActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        Fragment fragment = null;
-
         if (id == R.id.nav_camera) {
             // Handle the camera action
             startActivity(new Intent(this, HomeActivity.class));
@@ -303,14 +304,6 @@ public class HomeActivity extends AppCompatActivity
                     });
 
         }
-
-        if (fragment != null) {
-            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-            ft.replace(R.id.content_fragment_layout, fragment);
-            ft.commit();
-        }
-
-
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -378,6 +371,7 @@ public class HomeActivity extends AppCompatActivity
                             @Override
                             public void onSuccess(Void aVoid) {
                                 Toast.makeText(HomeActivity.this, "Firebase : Insert Data Successfully", Toast.LENGTH_LONG).show();
+                                sendNotification();
                                 task.dismissDialog();
                             }
                         })
