@@ -43,11 +43,6 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
     private GoogleApiClient mGoogleApiClient;
     private FirebaseAuth mFirebaseAuth;
 
-    // FIXME: editTextEmail -> mEditTextEmail
-    private EditText mEditTextEmail;
-    // FIXME: editTextPassword -> mEditTextPassword
-    private EditText mEditTextPassword;
-
     private FirebaseAuth.AuthStateListener mFirebaseAuthListener;
     private FirebaseDatabase mFirebaseDatabase;
 
@@ -78,19 +73,6 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
                 .build();
 
         mFirebaseAuth = FirebaseAuth.getInstance();
-
-
-        // TODO: 昨日お伝えしましたが、DataBindingLibraryを使うとfindViewByIdが要らなくなるので使った方がよいです
-        // (修正は必須ではないです)
-        mEditTextEmail = (EditText) findViewById(R.id.editText_email);
-        mEditTextPassword = (EditText) findViewById(R.id.editText_password);
-
-        Button emailLoginButton = (Button) findViewById(R.id.email_login_button);
-        emailLoginButton.setOnClickListener(new View.OnClickListener(){
-            public void onClick(View view){
-                createUser(mEditTextEmail.getText().toString(), mEditTextPassword.getText().toString());
-            }
-        });
 
 
         SignInButton googleLoginButton = (SignInButton) findViewById(R.id.login_button);

@@ -10,47 +10,6 @@
     tools:layout_editor_absoluteX="0dp">
 
 
-    <android.support.design.widget.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <EditText
-            android:id="@+id/editText_email"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:ems="10"
-            android:hint="Email"
-            android:inputType="textEmailAddress"
-            tools:layout_editor_absoluteX="8dp"
-            tools:layout_editor_absoluteY="43dp" />
-    </android.support.design.widget.TextInputLayout>
-
-
-    <android.support.design.widget.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <EditText
-            android:id="@+id/editText_password"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:ems="10"
-            android:hint="Password"
-            android:inputType="textPassword"
-            tools:layout_editor_absoluteX="8dp"
-            tools:layout_editor_absoluteY="102dp" />
-    </android.support.design.widget.TextInputLayout>
-
-    <Button
-        android:id="@+id/email_login_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Login"
-        tools:layout_editor_absoluteX="8dp"
-        tools:layout_editor_absoluteY="208dp" />
-
     <com.google.android.gms.common.SignInButton
         android:id="@+id/login_button"
         android:layout_width="match_parent"

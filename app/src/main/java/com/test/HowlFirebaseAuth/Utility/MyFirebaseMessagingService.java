@@ -41,16 +41,18 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
 
         Map<String, String> data = remoteMessage.getData();
+
+        String name = data.get("name");
         String title = data.get("title");
 
         if(Singleton.getInstance().connectedMember.getPosition().equals("CEO")){
-            showNotification(remoteMessage, title);
+            showNotification(remoteMessage, name, title);
         }
 
 
     }
 
-    public void showNotification(RemoteMessage remoteMessage, String title){
+    public void showNotification(RemoteMessage remoteMessage, String name, String title){
 
         AlarmAlertWakeLock.acquireCpuWakeLock(getApplicationContext());
 
@@ -63,7 +65,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this);
-        notificationBuilder.setContentTitle("Notification");
+        notificationBuilder.setContentTitle(name);
         notificationBuilder.setContentText(title/*remoteMessage.getNotification().getBody()*/);
         notificationBuilder.setAutoCancel(true);
         notificationBuilder.setSmallIcon(R.mipmap.ic_launcher);

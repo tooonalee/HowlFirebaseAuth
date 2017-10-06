@@ -1,6 +1,7 @@
 package com.test.HowlFirebaseAuth.Activity;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -49,12 +50,14 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.test.HowlFirebaseAuth.BuildConfig;
+import com.test.HowlFirebaseAuth.Utility.Singleton;
 import com.test.HowlFirebaseAuth.ValueObject.ImageDTO;
 import com.test.HowlFirebaseAuth.R;
 import com.test.HowlFirebaseAuth.Utility.ProgressDialogTask;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -119,6 +122,7 @@ public class HomeActivity extends AppCompatActivity
                 .addApi(Auth.GOOGLE_SIGN_IN_API, mGoogleSignInOptions)
                 .build();
 
+/*
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -127,6 +131,7 @@ public class HomeActivity extends AppCompatActivity
                 FirebaseCrash.report(new Exception("My first Android non-fatal error"));
             }
         });
+*/
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -290,18 +295,20 @@ public class HomeActivity extends AppCompatActivity
 */
 
         } else if (id == R.id.nav_send) {
-            sendNotification();
+            sendNotification("Hello", "FIREBASE");
         } else if (id == R.id.nav_logout){
-            mFirebaseAuth.signOut();
+
             // Google sign out
             Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
                     new ResultCallback<Status>() {
                         @Override
                         public void onResult(@NonNull Status status) {
+                            mFirebaseAuth.signOut();
                             finish();
                             startActivity(new Intent(HomeActivity.this, MainActivity.class));
                         }
                     });
+
 
         }
 
@@ -321,16 +328,29 @@ public class HomeActivity extends AppCompatActivity
                 imageView.setImageURI(Uri.fromFile(f));
             }
         }
+
+        Bundle extras = data.getExtras();
+        if (extras == null || extras.get("data") == null) return;
+
+        if(resultCode == RESULT_CANCELED){
+            finish();
+            Toast.makeText(HomeActivity.this, "BACK",Toast.LENGTH_LONG).show();
+        }
+
     }
 
-    private void upload(String uri){
+
+    private void upload(String uri) {
         //Storage Server
         // FIXME: "gs://howlfirebaseauth-24336.appspot.com"を定数化してください
         StorageReference storageRef = mFirebaseStorage.getReferenceFromUrl("gs://howlfirebaseauth-24336.appspot.com");
 
         final Uri file = Uri.fromFile( new File(uri) );
+        //long dateはFileNameを区別させるためのID
+        long date = new Date().getTime();
         // FIXME: "images/"を定数化してください
-        StorageReference riversRef = storageRef.child("images/"+file.getLastPathSegment());
+
+        StorageReference riversRef = storageRef.child("images/" + file.getLastPathSegment() + date);
         UploadTask uploadTask = riversRef.putFile(file);
 
         final ProgressDialogTask task = new ProgressDialogTask(HomeActivity.this);
@@ -371,8 +391,12 @@ public class HomeActivity extends AppCompatActivity
                             @Override
                             public void onSuccess(Void aVoid) {
                                 Toast.makeText(HomeActivity.this, "Firebase : Insert Data Successfully", Toast.LENGTH_LONG).show();
-                                sendNotification();
+                                sendNotification(Singleton.connectedMember.getName(), title.getText().toString());
                                 task.dismissDialog();
+
+                                Intent intent = new Intent(HomeActivity.this, BoardActivity.class);
+                                startActivity(intent);
+                                finish();
                             }
                         })
                         .addOnFailureListener(new OnFailureListener() {
@@ -398,24 +422,24 @@ public class HomeActivity extends AppCompatActivity
         return cursor.getString(index);
     }
 
-    public void sendNotification(){
+    public void sendNotification(String connectedMemberName, String titleName){
         OkHttpClient client = new OkHttpClient();
 
         String to = "/topics/all";
-        String title = "Hello Firebase!";
+        String name = connectedMemberName;
+        String title = titleName;
 
         MediaType mediaType = MediaType.parse("application/json");
         RequestBody body = RequestBody.create(mediaType,
-                "{\r\n  \"to\": \""+ to +"\",\r\n  \"data\": {\r\n    \"title\": \"" + title + "\"\r\n   }\r\n}");
+                "{\r\n  \"to\": \"" + to + "\",\r\n  \"data\": {\r\n  \t\"name\" :\"" + name + "\",\r\n    \"title\" :\"" + title + "\"\r\n   }\r\n}");
         Request request = new Request.Builder()
                 .url("https://fcm.googleapis.com/fcm/send")
                 .post(body)
                 .addHeader("content-type", "application/json")
                 .addHeader("authorization", "key=AAAAjK4zVoE:APA91bHStDhnWFSZzspIvS45nvlb7M4z8rzXnWBvrkQnDwyHe9mwwpIo7EqE2Uqy8kZ1sX5DY_oli_2uVAoSfsOUw9iJyrcMcLVKsrKP6Y9Kj2bi-8aEy1t2nANEVs6q0T6f7hicQMV5")
                 .addHeader("cache-control", "no-cache")
-                .addHeader("postman-token", "17ec8d96-d29f-56c6-b236-327f264fd13d")
+                .addHeader("postman-token", "dac049ee-ed75-0861-6517-173fee88deae")
                 .build();
-
 
         client.newCall(request).enqueue(new Callback() {
             @Override
