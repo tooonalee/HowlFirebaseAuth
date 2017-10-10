@@ -7,7 +7,6 @@ import android.util.Log;
 /**
  * Created by admin on 2017/10/03.
  */
-
 public class AlarmAlertWakeLock {
     private static final String TAG = "Sample_3";
     private static PowerManager.WakeLock sCpuWakeLock;

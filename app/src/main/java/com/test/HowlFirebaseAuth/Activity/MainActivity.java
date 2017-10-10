@@ -33,6 +33,7 @@ import com.test.HowlFirebaseAuth.R;
 import com.test.HowlFirebaseAuth.Utility.ProgressDialogTask;
 import com.test.HowlFirebaseAuth.Utility.Singleton;
 import com.test.HowlFirebaseAuth.ValueObject.Member;
+import com.test.HowlFirebaseAuth.dao.MemberDAO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +51,6 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
     // FirebaseDB DAO
     //--------------------------------------------------
     private List<Member> memberList = new ArrayList<>();
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,70 +92,24 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
         //onStart, onStop 시작하면 리스너를 달아주고 끝나면 리스너를 뗀다.
 
 
-        mFirebaseAuthListener = new FirebaseAuth.AuthStateListener(){
+        mFirebaseAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-
-
-                //FirebaseDBからMemberObjectValueを全部引き出す。
-                mFirebaseDatabase = FirebaseDatabase.getInstance();
-
-                mFirebaseDatabase.getReference().child("members").addValueEventListener(new ValueEventListener() {
-
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-
-                        memberList.clear();
-                        for (DataSnapshot snapShot : dataSnapshot.getChildren()) {
-                            Member member = snapShot.getValue(Member.class);
-                            memberList.add(member);
-                        }
-
-                        //Loginをしたのか、まず確認。
-                        final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                        if(user != null){
-                            //認証した状態
-
-                            //自分のEmailでMemberObjectを探す
-                            Member searchMember = null;
-                            for (Member member : memberList) {
-                                if (member.getMemberEmail().equals(user.getEmail())) {
-                                    searchMember = member;
-                                    Singleton.getInstance().connectedMember = searchMember;
-                                    break;
-                                }
-                            }
-
-                            if(searchMember != null){
-                                //すでに登録した場合、Move HomeActivity
-                                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
-                                startActivity(intent);
-                                finish(); //현재 Activity 사라짐*/
-                            }else{
-                                //登録しなった場合、Move MemberActivity
-                                Intent intent = new Intent(MainActivity.this, MemberActivity.class);
-                                startActivity(intent);
-                                finish(); //현재 Activity 사라짐
-                            }
-
-                        }else{
-                            //認証していない状態
-
-                        }
-
-
-
+                try{
+                    MemberDAO memberDAO = new MemberDAO();
+                    Member searchMember = memberDAO.selectMemberByEmail(firebaseAuth.getCurrentUser().getEmail());
+                    if(searchMember != null){
+                        Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                        startActivity(intent);
+                        finish();
+                    }else{
+                        Intent intent = new Intent(MainActivity.this, MemberActivity.class);
+                        startActivity(intent);
+                        finish();
                     }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-
-                    }
-
-                });
-
-
-
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
 
             }
         };
