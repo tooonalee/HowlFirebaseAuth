@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.test.HowlFirebaseAuth.Activity.HomeActivity">
+    tools:context="com.test.HowlFirebaseAuth.Activity.CheckActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -42,7 +42,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:background="@android:color/holo_blue_light"
-        android:text="出勤"
+        android:text="CHECK IN"
         android:textColor="@android:color/background_light" />
 
     <Space

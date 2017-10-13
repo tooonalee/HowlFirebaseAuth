@@ -66,7 +66,7 @@ public class MemberActivity extends AppCompatActivity {
                 member.setMemberEmail(mFirebaseUser.getEmail());
                 member.setName(memberNameEditText.getText().toString());
                 member.setPosition(position);
-                member.setOnWorkNotificationFlag(false);
+                member.setWorkingFlag(false);
 
                 final ProgressDialogTask task = new ProgressDialogTask(MemberActivity.this);
                 task.execute();
@@ -75,8 +75,7 @@ public class MemberActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(Void aVoid) {
                         task.dismissDialog();
-
-/*                        Toast.makeText(MemberActivity.this, "Success!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MemberActivity.this, "Success!", Toast.LENGTH_SHORT).show();
                         Intent intent = new Intent(MemberActivity.this, HomeActivity.class);
                         startActivity(intent);
                         finish(); //현재 Activity 사라짐*/

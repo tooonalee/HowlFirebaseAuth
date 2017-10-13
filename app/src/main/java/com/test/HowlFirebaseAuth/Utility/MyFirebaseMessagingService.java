@@ -1,7 +1,10 @@
 package com.test.HowlFirebaseAuth.Utility;
 
+import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
@@ -45,10 +48,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         String name = data.get("name");
         String title = data.get("title");
 
-        if(Singleton.getInstance().connectedMember.getPosition().equals("CEO")){
-            showNotification(remoteMessage, name, title);
-        }
-
+        showNotification(remoteMessage, name, title);
 
     }
 
@@ -63,7 +63,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         //사운드 기능 추가
         Uri soundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
-
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this);
         notificationBuilder.setContentTitle(name);
         notificationBuilder.setContentText(title/*remoteMessage.getNotification().getBody()*/);
@@ -72,7 +71,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         notificationBuilder.setContentIntent(pendingIntent);
         notificationBuilder.setSound(soundUri);
         notificationBuilder.setVibrate(new long[] {100,200,300,400}); // pattern의 첫번째 파라미터는 wait시간, 두번째는 진동시간(단위 ms)
-
         NotificationManagerCompat managerCompat = NotificationManagerCompat.from(this);
         managerCompat.notify(0, notificationBuilder.build());
 

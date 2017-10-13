@@ -6,11 +6,4 @@
         android:orderInCategory="100"
         android:title="@string/action_settings"
         app:showAsAction="never" />
-
-    <item
-        android:id="@+id/action_print"
-        android:orderInCategory="100"
-        android:title="Print"
-        android:icon="@drawable/ic_print_white_24dp"
-        app:showAsAction="never" />
 </menu>

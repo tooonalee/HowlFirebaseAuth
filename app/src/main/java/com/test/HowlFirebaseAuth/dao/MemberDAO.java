@@ -17,8 +17,12 @@ import com.test.HowlFirebaseAuth.Activity.MainActivity;
 import com.test.HowlFirebaseAuth.Activity.MemberActivity;
 import com.test.HowlFirebaseAuth.Utility.Singleton;
 import com.test.HowlFirebaseAuth.ValueObject.Member;
+import com.test.HowlFirebaseAuth.database.MemberDatabase;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Semaphore;
 
@@ -28,31 +32,43 @@ import java.util.concurrent.Semaphore;
 
 public class MemberDAO {
 
-    private static Member returnMember;
-    private static MemberDAO _shared;
-    public MemberDAO(){}
+    public static Member returnMember;
+    private MemberDatabase memberDatabase = new MemberDatabase();
 
-    private static MemberDAO getInstance(){
+    private MemberDAO(){}
+    private static MemberDAO _shared;
+    public static MemberDAO getInstance(){
         if(_shared == null)
             _shared = new MemberDAO();
         return _shared;
     }
 
+    private List<Member> memberList = new ArrayList<>();
+
+    public void updateMember(Member member){
+        FirebaseDatabase mFirebaseDatabase;
+        mFirebaseDatabase = FirebaseDatabase.getInstance();
+
+        String key = mFirebaseDatabase.getReference().child("members").getKey();
+        Map<String, Object> memberValues = member.toMap();
+
+        Map<String, Object> childUpdates = new HashMap<>();
+        childUpdates.put("/members/" + key, memberValues);
+        //childUpdates.put("/user-members/" + member.getMemberEmail() + "/" + key, postValues);
+
+        mFirebaseDatabase.getReference().updateChildren(childUpdates);
+
+    }
+
     public Member selectMemberByEmail(String email){
-        Member searchMember = null;
+        returnMember = null;
 
-        try{
-            loadModelWithDataFromFirebase(email);
-        }catch (InterruptedException e){
-            e.printStackTrace();
-        }
-
-        Log.d("returnMember :  ", returnMember.getMemberEmail());
-
+        selectMemberByEmailWithFirebaseDatabase(email);
+        //memberDatabase.selectMemberByEmail(email);
         return returnMember;
     }
 
-    public void loadModelWithDataFromFirebase(final String email) throws InterruptedException{
+    public void selectMemberByEmailWithFirebaseDatabase(final String email){
         FirebaseDatabase mFirebaseDatabase;
         mFirebaseDatabase = FirebaseDatabase.getInstance();
 
@@ -68,6 +84,9 @@ public class MemberDAO {
                     memberList.add(member);
                 }
 
+                if(memberList.isEmpty()){
+                    return;
+                }
                 //自分のEmailでMemberObjectを探す
                 for (Member member : memberList) {
                     if (member.getMemberEmail().equals(email)) {
@@ -77,7 +96,6 @@ public class MemberDAO {
                         break;
                     }
                 }
-
             }
 
             @Override
@@ -85,9 +103,8 @@ public class MemberDAO {
 
             }
         });
-
-
     }
+
 
 
 }

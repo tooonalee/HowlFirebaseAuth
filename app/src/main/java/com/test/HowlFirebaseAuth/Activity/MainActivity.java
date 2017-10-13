@@ -19,6 +19,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
@@ -36,7 +37,9 @@ import com.test.HowlFirebaseAuth.ValueObject.Member;
 import com.test.HowlFirebaseAuth.dao.MemberDAO;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements  GoogleApiClient.OnConnectionFailedListener{
 
@@ -73,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
                 .build();
 
         mFirebaseAuth = FirebaseAuth.getInstance();
+        mFirebaseDatabase = FirebaseDatabase.getInstance();
 
 
         SignInButton googleLoginButton = (SignInButton) findViewById(R.id.login_button);
@@ -95,21 +99,57 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
         mFirebaseAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                try{
-                    MemberDAO memberDAO = new MemberDAO();
-                    Member searchMember = memberDAO.selectMemberByEmail(firebaseAuth.getCurrentUser().getEmail());
-                    if(searchMember != null){
-                        Intent intent = new Intent(MainActivity.this, HomeActivity.class);
-                        startActivity(intent);
-                        finish();
-                    }else{
-                        Intent intent = new Intent(MainActivity.this, MemberActivity.class);
-                        startActivity(intent);
-                        finish();
+
+                //自分のEmailで
+                //Member searchMember = MemberDAO.getInstance().selectMemberByEmail(firebaseAuth.getCurrentUser().getEmail());
+                mFirebaseDatabase.getReference().child("members").addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        Member searchMember = null;
+                        ArrayList<Member> memberList = new ArrayList<>();
+
+                        memberList.clear();
+                        for (DataSnapshot snapShot : dataSnapshot.getChildren()) {
+                            Member member = snapShot.getValue(Member.class);
+                            memberList.add(member);
+                        }
+
+                        if(memberList.isEmpty() || FirebaseAuth.getInstance().getCurrentUser().getEmail() == null ){
+                            return;
+                        }
+                        //自分のEmailでMemberObjectを探す
+                        for (Member member : memberList) {
+                            if (member.getMemberEmail().equals(FirebaseAuth.getInstance().getCurrentUser().getEmail())) {
+                                Log.d("More", member.getMemberEmail());
+                                MemberDAO.getInstance().returnMember = member;
+                                Singleton.getInstance().connectedMember = member;
+                                break;
+                            }
+                        }
+
+                        if(searchMember != null){
+                            //あるなら
+                            Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                            startActivity(intent);
+                            finish();
+                        }else{
+                            //ないなら
+
+                        }
                     }
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+
+
+
+/*                Intent intent1 = new Intent(MainActivity.this, CheckActivity.class);
+                startActivity(intent1);
+                finish();*/
+
 
             }
         };
@@ -134,39 +174,6 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
         }
     }
 
-    // FIXME: ここもコメントを日本語にして欲しいです
-    private void createUser(final String email, final String password){
-        mFirebaseAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            loginUser(email, password);
-                        } else {
-                            // FIXME: 失敗しているのに「Register Successfully」は不適切です
-                            // If sign in fails, display a message to the user.
-                        }
-
-                        // ...
-                    }
-                });
-    }
-
-    private void loginUser(String email, String password){
-        mFirebaseAuth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                @Override
-                public void onComplete(@NonNull Task<AuthResult> task) {
-                    if (task.isSuccessful()) {
-
-                    } else {
-                        // FIXME: 失敗しているのに「Login Successfully」は不適切です
-                    }
-
-                    // ...
-                }
-            });
-    }
 
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
 
@@ -176,8 +183,63 @@ public class MainActivity extends AppCompatActivity implements  GoogleApiClient.
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
-                            Toast.makeText(MainActivity.this, "Complete", Toast.LENGTH_LONG).show();
+                            mFirebaseDatabase.getReference().child("members").addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    Member searchMember = null;
+                                    ArrayList<Member> memberList = new ArrayList<>();
+
+                                    memberList.clear();
+                                    for (DataSnapshot snapShot : dataSnapshot.getChildren()) {
+                                        Member member = snapShot.getValue(Member.class);
+                                        member.setKey(snapShot.getKey());
+                                        memberList.add(member);
+                                    }
+
+                                    if(memberList.isEmpty()){
+                                        return;
+                                    }
+
+                                    //自分のEmailでMemberObjectを探す
+                                    for (Member member : memberList) {
+                                        if (member.getMemberEmail().equals(FirebaseAuth.getInstance().getCurrentUser().getEmail())) {
+                                            Log.d("More", member.getMemberEmail());
+                                            searchMember = member;
+                                            MemberDAO.getInstance().returnMember = member;
+                                            Singleton.getInstance().connectedMember = member;
+                                            break;
+                                        }
+                                    }
+
+                                    // Sign in success, update UI with the signed-in user's information
+                                    if(searchMember != null){
+                                        Toast.makeText(MainActivity.this, "Go to HomeActivity", Toast.LENGTH_SHORT).show();
+                                        Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                                        startActivity(intent);
+                                        finish(); //현재 Activity 사라짐*/
+                                    }else{
+                                        Member member = new Member();
+                                        member.setMemberEmail(FirebaseAuth.getInstance().getCurrentUser().getEmail());
+                                        member.setWorkingFlag(false);
+                                        mFirebaseDatabase.getReference().child("members").push().setValue(member).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                            @Override
+                                            public void onSuccess(Void aVoid) {
+                                                Toast.makeText(MainActivity.this, "Go to HomeActivity", Toast.LENGTH_SHORT).show();
+                                                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                                                startActivity(intent);
+                                                finish(); //현재 Activity 사라짐*/
+                                            }
+                                        });
+                                    }
+
+                                }
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+
+                                }
+                            });
+
+
                         } else {
                             // If sign in fails, display a message to the user.
                             Toast.makeText(MainActivity.this, "Fail", Toast.LENGTH_LONG).show();
